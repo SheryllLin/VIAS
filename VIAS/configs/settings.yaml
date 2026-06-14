@@ -1,0 +1,37 @@
+app:
+  name: VIAS
+  version: 1.0.0
+  environment: local
+runtime:
+  device: auto
+paths:
+  uploads_dir: backend/uploads
+  outputs_dir: backend/outputs
+  sqlite_path: sqlite_db/vias.db
+  faiss_dir: faiss_store
+  model_dir: models
+video:
+  fps_window: 60
+  tms_window: 60
+  frame_stride: 1
+tracker:
+  high_confidence_threshold: 0.5
+  low_confidence_threshold: 0.1
+  new_track_threshold: 0.6
+  match_iou_threshold: 0.3
+  max_time_lost: 30
+thresholds:
+  face_match: 0.60
+  body_match: 0.50
+  detector_confidence: 0.25
+  activity_confidence: 0.50
+models:
+  yolov10_weights: models/yolov10/yolov10n.pt
+  arcface_weights: models/arcface/arcface.onnx
+  arcface_model_name: buffalo_l
+  osnet_weights: models/osnet/osnet_x1_0.pth
+  osnet_model_name: osnet_x1_0
+  stgcn_weights: models/stgcn/stgcn_plus_plus.pth
+  ollama_model: llama3.2
+database:
+  top_k: 5

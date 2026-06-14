@@ -1,0 +1,9 @@
+path: datasets
+train:
+  - CrowdHuman/images/train
+  - COCO2017/images/train2017
+val:
+  - CrowdHuman/images/val
+  - COCO2017/images/val2017
+names:
+  0: person

@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  vias-backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: vias-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  vias-gradio:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: vias-gradio
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./:/app
+    command: python frontend/gradio_ui/app.py
+    depends_on:
+      - vias-backend
