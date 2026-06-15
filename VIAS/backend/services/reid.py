@@ -12,7 +12,8 @@ except Exception:  # pragma: no cover - optional dependency fallback
     FaceAnalysis = None
 
 try:
-    from torchreid.utils import FeatureExtractor
+    import torchreid
+    FeatureExtractor = torchreid.utils.FeatureExtractor
 except Exception:  # pragma: no cover - optional dependency fallback
     FeatureExtractor = None
 
@@ -88,17 +89,39 @@ class OSNetService:
         self.weights_path = resolve_path(settings.models.osnet_weights)
         self.model_name = settings.models.osnet_model_name
         self.extractor = None
+        
+        # 🔍 LOGGING: Check if FeatureExtractor is available
         if FeatureExtractor is None:
+            logger.info("🔴 OSNET INIT: FeatureExtractor is None (torchreid not installed)")
             return
+        
+        logger.info("🟢 OSNET INIT: FeatureExtractor available, initializing model...")
+        logger.info(f"   Model: {self.model_name}")
+        logger.info(f"   Device: {self.device}")
+        logger.info(f"   Weights path: {self.weights_path}")
+        logger.info(f"   Weights exist: {self.weights_path.exists()}")
+        
         try:
+            # If weights exist, use them; otherwise let torchreid download pretrained
             model_path = str(self.weights_path) if self.weights_path.exists() else ""
+            
+            if model_path:
+                logger.info(f"🟡 OSNET INIT: Using local weights: {model_path}")
+            else:
+                logger.info(f"🟡 OSNET INIT: Local weights not found, torchreid will download pretrained model")
+            
             self.extractor = FeatureExtractor(
                 model_name=self.model_name,
                 model_path=model_path or None,
                 device=self.device if self.device in {"cpu", "cuda"} else "cpu",
             )
+            logger.info("🟢 OSNET INIT: Model initialized successfully")
         except Exception as exc:  # pragma: no cover - dependency-specific
-            logger.warning("OSNet initialization failed: %s", exc)
+            import traceback
+            
+            logger.error("🔴 OSNET INIT FAILED")
+            logger.error(traceback.format_exc())
+            
             self.extractor = None
 
     @property
@@ -106,16 +129,21 @@ class OSNetService:
         return self.extractor is not None
 
     def extract_from_image(self, image: np.ndarray) -> EmbeddingResult:
+        # 🔍 LOGGING: Check if extractor is available
         if self.extractor is None:
+            logger.info("🔴 OSNET EXTRACT: extractor is None, returning fallback")
             return EmbeddingResult(None, 0.0, "fallback")
+        
+        logger.info("🟡 OSNET EXTRACT: Running body embedding extraction...")
         try:
             rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             embedding = self.extractor([rgb])[0]
             vector = np.asarray(embedding, dtype=np.float32).reshape(-1)
             confidence = float(np.linalg.norm(vector) / (np.linalg.norm(vector) + 1e-6))
+            logger.info(f"🟢 OSNET EXTRACT: Real embedding generated (dim={vector.shape[0]}, conf={confidence:.4f})")
             return EmbeddingResult(vector, confidence, "osnet")
         except Exception as exc:  # pragma: no cover - dependency-specific
-            logger.warning("OSNet inference failed: %s", exc)
+            logger.error(f"🔴 OSNET EXTRACT FAILED: {type(exc).__name__}: {exc}")
             return EmbeddingResult(None, 0.0, "fallback")
 
 
