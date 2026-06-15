@@ -13,7 +13,6 @@ from backend.models.schemas import QueryRequest, QueryResponse, SearchPersonRequ
 from backend.services.analytics import AnalyticsService
 from backend.services.behavior import BehaviorDiscoveryService
 from backend.services.datasets import DatasetRegistry
-from backend.services.embedding_utils import deterministic_embedding
 from backend.services.faiss_store import FAISSStore
 from backend.services.model_registry import ModelRegistry
 from backend.services.query_engine import NLQueryEngine
@@ -102,10 +101,31 @@ def upload_reference_image(file: UploadFile = File(...), person_id: str = "refer
 
 @router.post("/search-person")
 def search_person(request: SearchPersonRequest) -> dict:
+    """
+    Search for a person by ID using stored real embeddings.
+    Only searches embeddings with matching person_id and source=arcface.
+    """
     if request.person_id:
-        query = deterministic_embedding(f"face-ref:{request.person_id}:lookup", 512)
-        results = get_store().search("face_embeddings", query, top_k=request.top_k)
-        return {"results": [item for item in results if item.get("person_id") == request.person_id]}
+        # Load all metadata to find matching person_id with real embeddings
+        store = get_store()
+        payloads = store._load_payloads("face_embeddings")
+        
+        results = []
+        for idx, payload in enumerate(payloads):
+            # Only include real ArcFace embeddings for this person
+            if payload.get("person_id") == request.person_id and payload.get("source") == "arcface":
+                results.append({
+                    "index": idx,
+                    "person_id": payload.get("person_id"),
+                    "image_path": payload.get("image_path"),
+                    "source": payload.get("source"),
+                })
+                if len(results) >= request.top_k:
+                    break
+        
+        return {"results": results}
+    
+    # Fallback: return tracks from database
     return {"results": get_repository().fetch_table("tracks")[: request.top_k]}
 
 
@@ -147,3 +167,9 @@ def datasets() -> dict:
 @router.get("/models/status")
 def models_status() -> dict:
     return {"models": get_model_registry().status()}
+
+
+@router.get("/reid/statistics")
+def reid_statistics() -> dict:
+    """Return Re-ID statistics: real vs fallback embeddings."""
+    return get_reid_service().get_statistics()
