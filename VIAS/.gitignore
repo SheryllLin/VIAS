@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite3
+*.db-journal
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Generated outputs
+outputs/
+generated_videos/
+backend/outputs/
+backend/uploads/*.mp4
+backend/uploads/*.avi
+
+# Test files (debugging)
+test_*.py
+!tests/test_*.py
+
+# Model weights (large files)
+models/*/*.pt
+models/*/*.onnx
+models/*/*.pth
+!models/**/README.md
+
+# FAISS indices
+faiss_store/*.faiss
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# PyCharm
+.idea/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Documentation builds
+docs/_build/
+site/
